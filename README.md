@@ -1,7 +1,6 @@
 # 10x-LeetCode-Solver
 A chrome extension that solves leet code problems for you
 
-Build during this live stream in 6 hours -> [Youtube Live Stream](https://youtube.com/live/3cCQ_geKWRk)
 
 # How to use
 ### 1) Install the packages 
