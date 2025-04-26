@@ -1,3 +1,5 @@
+thank-you to WTC 
+
 # 10x-LeetCode-Solver
 A chrome extension that solves leet code problems for you
 
