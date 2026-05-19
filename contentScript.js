@@ -18,39 +18,71 @@ function parseCode(code) {
 
     return (end) ? code.slice(start, end) : code.slice(start);
   } else {
-    const codeblock = /```\s*([^]+?.*?[^]+?[^]+?)```/g;
-    const match =  codeblock.exec(code)
+    const codeblock = /```(?:[\w+#.-]+)?\s*([\s\S]*?)```/;
+    const match = codeblock.exec(code)
     if (match) {
-    return match[1]
+    return match[1].trim()
     } else {
-    return code
+    return code.trim()
     }
   }
 }
 
-window.addEventListener("sendChromeData", async function(evt){
-    console.log(evt)
-
-    const { sourceCode, type } = evt.detail;
-    console.log("Auto Paste!")
-
-    let parsedSourceCode = parseCode(sourceCode)
-    console.log()
-    if (type === "autoPaste") {
-        window.monaco.editor.getModels()[0].setValue(parsedSourceCode)
-    } else if (type === "autoType") {
-        let addedChars = ''
-        const codeCharSplit = parsedSourceCode.split("")
-        while (codeCharSplit.length > 0) {
-            let _char = codeCharSplit.shift()
-            addedChars += _char
-
-            // randomness to typing
-            await timeout(100 + Math.round(Math.random() * 150))
-            window.monaco.editor.getModels()[0].setValue(addedChars)
-        }
-
+function getEditor() {
+    const monaco = window.monaco;
+    if (!monaco?.editor) {
+        return null;
     }
-    
-    
+
+    const editors = monaco.editor.getEditors ? monaco.editor.getEditors() : [];
+    const focusedEditor = editors.find((editor) => editor.hasTextFocus?.());
+    if (focusedEditor) {
+        return focusedEditor;
+    }
+
+    const codeEditor = editors.find((editor) => editor.getModel?.()?.getLanguageId?.());
+    if (codeEditor) {
+        return codeEditor;
+    }
+
+    const model = monaco.editor.getModels?.()[0];
+    if (!model) {
+        return null;
+    }
+
+    return {
+        setValue: (value) => model.setValue(value),
+    };
+}
+
+async function setEditorValue(sourceCode, type) {
+    const editor = getEditor();
+    if (!editor) {
+        throw new Error("LeetCode editor is not ready.");
+    }
+
+    const parsedSourceCode = parseCode(sourceCode);
+
+    if (type === "autoPaste") {
+        editor.setValue(parsedSourceCode);
+        return;
+    }
+
+    let addedChars = "";
+    const codeCharSplit = parsedSourceCode.split("");
+    while (codeCharSplit.length > 0) {
+        addedChars += codeCharSplit.shift();
+        await timeout(20 + Math.round(Math.random() * 40));
+        editor.setValue(addedChars);
+    }
+}
+
+window.addEventListener("sendChromeData", async function(evt){
+    const { sourceCode, type, requestId } = evt.detail;
+    try {
+        await setEditorValue(sourceCode, type);
+        window.dispatchEvent(new CustomEvent("sendChromeDataResult", {detail: { ok: true, type, requestId } }));
+    } catch (error) {
+        window.dispatchEvent(new CustomEvent("sendChromeDataResult", {detail: { ok: false, type, requestId, error: error.message } }));
+    }
 });

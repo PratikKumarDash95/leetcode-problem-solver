@@ -23,6 +23,27 @@ function runSolver() {
 	}});
 }
 
+function sendEditorCommand(type, sourceCode, sendResponse) {
+	const requestId = `${Date.now()}-${Math.random()}`;
+	const timeoutId = setTimeout(() => {
+		window.removeEventListener("sendChromeDataResult", handleResult);
+		sendResponse({ ok: false, error: "Timed out while updating the LeetCode editor." });
+	}, 5000);
+
+	function handleResult(event) {
+		if (event.detail?.requestId && event.detail.requestId !== requestId) {
+			return;
+		}
+
+		clearTimeout(timeoutId);
+		window.removeEventListener("sendChromeDataResult", handleResult);
+		sendResponse(event.detail || { ok: true });
+	}
+
+	window.addEventListener("sendChromeDataResult", handleResult);
+	window.dispatchEvent(new CustomEvent("sendChromeData", {detail: { sourceCode, type, requestId } }));
+}
+
 function isLeetCodeProblemPage() {
 	return /^https:\/\/(www\.)?leetcode\.com\/problems\/[^/]+/.test(window.location.href);
 }
@@ -159,7 +180,6 @@ const interval = setInterval(() => {
 
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log(message)
     if (message.type === "extract-current-problem") {
     	const foundProblem = publishProblemInfo(true);
     	sendResponse(foundProblem ? {
@@ -168,9 +188,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     		sourceCodeText
     	} : null);
     } else if (message.type === "autoPaste") {
-    	window.dispatchEvent(new CustomEvent("sendChromeData", {detail: { sourceCode: message.sourceCode, type: "autoPaste" } }));
+    	sendEditorCommand("autoPaste", message.sourceCode, sendResponse);
     } else if (message.type === "autoType") {
-    	window.dispatchEvent(new CustomEvent("sendChromeData", {detail: { sourceCode: message.sourceCode, type: "autoType" } }));
+    	sendEditorCommand("autoType", message.sourceCode, sendResponse);
     }
 
     return true

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import Switch from "react-switch";
 
 import pacman from "../../pacman.svg";
 
@@ -88,11 +87,10 @@ function SolverForm({ settingsOpen, onCloseSettings }) {
 						const apiProblem = await fetchProblemFromLeetCode(titleSlug);
 						if (apiProblem) {
 							clearInterval(interval)
-							console.log("got problem from leetcode api", apiProblem)
 							setLeetCodeProblemInfo(apiProblem)
 						}
 					} catch (error) {
-						console.log("leetcode api fallback failed", error)
+						setError(`Could not load problem from LeetCode. (${error.message})`)
 					}
 				}
 
@@ -103,7 +101,6 @@ function SolverForm({ settingsOpen, onCloseSettings }) {
 
 					if (response) {
 						clearInterval(interval)
-						console.log("got problem", response)
 						setLeetCodeProblemInfo(response)
 						return
 					}
@@ -113,7 +110,6 @@ function SolverForm({ settingsOpen, onCloseSettings }) {
 					}, (backgroundResponse) => {
 						if (backgroundResponse) {
 							clearInterval(interval)
-							console.log("got problem", backgroundResponse)
 							setLeetCodeProblemInfo(backgroundResponse)
 						}
 					})
@@ -189,7 +185,6 @@ function SolverForm({ settingsOpen, onCloseSettings }) {
 		setError("")
 		setLoading(true)
 		const prompt = getSolutionPrompt()
-		console.log("Prompt", prompt)
 		try {
 			const response = await fetch(apiUrl + "/generate", {
 				method: "POST",
@@ -210,7 +205,6 @@ function SolverForm({ settingsOpen, onCloseSettings }) {
 			setSolution(result.output);
 	
 		} catch(e) {
-			console.log(e)
 			setError(`Could not get a solution. Check Settings API URL and make sure your solver server is running. (${e.message})`)
 		}
 		
@@ -220,13 +214,21 @@ function SolverForm({ settingsOpen, onCloseSettings }) {
 
 	const autoPaste = () => {
 		chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-		    chrome.tabs.sendMessage(tabs[0].id, {type:"autoPaste", sourceCode: solution});
+			chrome.tabs.sendMessage(tabs[0].id, {type:"autoPaste", sourceCode: solution}, (response) => {
+				if (!response?.ok) {
+					setError(`Could not paste into LeetCode editor. (${response?.error || "No response from page"})`)
+				}
+			});
 		});
 	}
 
 	const autoType = () => {
 		chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-		    chrome.tabs.sendMessage(tabs[0].id, {type:"autoType", sourceCode: solution});
+			chrome.tabs.sendMessage(tabs[0].id, {type:"autoType", sourceCode: solution}, (response) => {
+				if (!response?.ok) {
+					setError(`Could not type into LeetCode editor. (${response?.error || "No response from page"})`)
+				}
+			});
 		});
 	}
 
