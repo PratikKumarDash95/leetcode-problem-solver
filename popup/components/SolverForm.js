@@ -5,25 +5,121 @@ import pacman from "../../pacman.svg";
 
 import "../styles/solver-form.scss";
 
-function SolverForm() {
+const DEFAULT_API_URL = "http://localhost:3000";
+
+function getTitleSlugFromUrl(url) {
+	const match = url?.match(/leetcode\.com\/problems\/([^/?#]+)/);
+	return match ? match[1] : "";
+}
+
+function htmlToText(html) {
+	const doc = new DOMParser().parseFromString(html || "", "text/html");
+	return doc.body.innerText.trim();
+}
+
+async function fetchProblemFromLeetCode(titleSlug) {
+	const response = await fetch("https://leetcode.com/graphql", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({
+			query: `
+				query questionData($titleSlug: String!) {
+					question(titleSlug: $titleSlug) {
+						title
+						content
+						codeSnippets {
+							lang
+							code
+						}
+					}
+				}
+			`,
+			variables: { titleSlug },
+		}),
+	});
+
+	if (!response.ok) {
+		throw new Error(`LeetCode returned ${response.status}`);
+	}
+
+	const result = await response.json();
+	const question = result?.data?.question;
+	if (!question) {
+		return null;
+	}
+
+	const javaSnippet = question.codeSnippets?.find((snippet) => snippet.lang === "Java");
+	const firstSnippet = question.codeSnippets?.[0];
+
+	return {
+		problemText: [question.title, htmlToText(question.content)].filter(Boolean).join("\n\n"),
+		languageText: javaSnippet?.lang || firstSnippet?.lang || "Java",
+		sourceCodeText: javaSnippet?.code || firstSnippet?.code || "",
+	};
+}
+
+function SolverForm({ settingsOpen, onCloseSettings }) {
 	const [loading, setLoading] = useState(false);
 	const [solution, setSolution] = useState();
 	const [leetCodeProblemInfo, setLeetCodeProblemInfo] = useState()
+	const [apiUrl, setApiUrl] = useState(DEFAULT_API_URL);
+	const [draftApiUrl, setDraftApiUrl] = useState(DEFAULT_API_URL);
+	const [error, setError] = useState("");
 		
-	const apiUrl = "http://d350-34-143-184-211.ngrok.io"
-
 	useEffect(() => {
 		let interval; 
 
 		const fetchCurrentProblemInfo  = (cb) => {
-			chrome.runtime.sendMessage({
-				type: "get-current-problem"
-			}, (response) => {
-				if (response) {
-					clearInterval(interval)
-					console.log("got problem", response)
-					setLeetCodeProblemInfo(response)
+			chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+				const activeTab = tabs[0];
+				if (!activeTab?.id) {
+					return
 				}
+
+				const loadFromLeetCodeApi = async () => {
+					const titleSlug = getTitleSlugFromUrl(activeTab.url);
+					if (!titleSlug) {
+						return;
+					}
+
+					try {
+						const apiProblem = await fetchProblemFromLeetCode(titleSlug);
+						if (apiProblem) {
+							clearInterval(interval)
+							console.log("got problem from leetcode api", apiProblem)
+							setLeetCodeProblemInfo(apiProblem)
+						}
+					} catch (error) {
+						console.log("leetcode api fallback failed", error)
+					}
+				}
+
+				chrome.tabs.sendMessage(activeTab.id, {
+					type: "extract-current-problem"
+				}, (tabResponse) => {
+					const response = tabResponse || null
+
+					if (response) {
+						clearInterval(interval)
+						console.log("got problem", response)
+						setLeetCodeProblemInfo(response)
+						return
+					}
+
+					chrome.runtime.sendMessage({
+						type: "get-current-problem"
+					}, (backgroundResponse) => {
+						if (backgroundResponse) {
+							clearInterval(interval)
+							console.log("got problem", backgroundResponse)
+							setLeetCodeProblemInfo(backgroundResponse)
+						}
+					})
+
+					loadFromLeetCodeApi()
+				})
 			})
 		}
 
@@ -36,8 +132,28 @@ function SolverForm() {
 		}
 	}, [])
 
+	useEffect(() => {
+		chrome.storage.sync.get({ apiUrl: DEFAULT_API_URL }, ({ apiUrl }) => {
+			setApiUrl(apiUrl);
+			setDraftApiUrl(apiUrl);
+		});
+	}, []);
+
+	const saveSettings = () => {
+		const nextApiUrl = draftApiUrl.trim().replace(/\/+$/, "");
+		chrome.storage.sync.set({ apiUrl: nextApiUrl || DEFAULT_API_URL }, () => {
+			setApiUrl(nextApiUrl || DEFAULT_API_URL);
+			onCloseSettings();
+		});
+	}
+
 	
 	const solve = async () => {
+		if (!leetCodeProblemInfo) {
+			setError("Open a LeetCode problem page first.");
+			return;
+		}
+
 		const getSolutionPrompt = () => {
 		return `[INST]
 		<<SYS>>
@@ -70,6 +186,7 @@ function SolverForm() {
 		INCOMPLETE SOURCE CODE: ${leetCodeProblemInfo.sourceCodeText}
 		[/INST]`
 		};
+		setError("")
 		setLoading(true)
 		const prompt = getSolutionPrompt()
 		console.log("Prompt", prompt)
@@ -84,10 +201,17 @@ function SolverForm() {
 				})
 			})
 			const result = await response.json()
-			setSolution(result['output']);
+			if (!response.ok) {
+				throw new Error(result?.error || `API returned ${response.status}`);
+			}
+			if (!result?.output) {
+				throw new Error("API response did not include an output field.");
+			}
+			setSolution(result.output);
 	
 		} catch(e) {
 			console.log(e)
+			setError(`Could not get a solution. Check Settings API URL and make sure your solver server is running. (${e.message})`)
 		}
 		
 		setLoading(false)
@@ -107,6 +231,22 @@ function SolverForm() {
 	}
 
 	return <div className="solver-form h-100 w-100 flex flex-column">
+		{settingsOpen && <div className="solver-form__settings">
+			<label htmlFor="api-url"><b>API URL</b></label>
+			<input
+				id="api-url"
+				type="text"
+				value={draftApiUrl}
+				placeholder="http://localhost:3000"
+				onChange={(event) => setDraftApiUrl(event.target.value)}
+			/>
+			<p>Your server must expose POST /generate and return JSON like {"{ \"output\": \"...\" }"}.</p>
+			<div className="solver-form__settings-actions">
+				<button type="button" onClick={saveSettings}>Save</button>
+				<button type="button" onClick={onCloseSettings}>Cancel</button>
+			</div>
+		</div>}
+		{error && <div className="solver-form__error">{error}</div>}
 		{!leetCodeProblemInfo && <div className="solver-form__no-problem-state flex flex-grow justify-center align-center">
 			<h2 className="solver-form__no-problem-state__title">There is no leetcode problem to solve!</h2>
 		</div>}

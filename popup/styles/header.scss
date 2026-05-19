@@ -9,6 +9,18 @@
 
 	}
 
+	.settings__button {
+		align-items: center;
+		background: transparent;
+		border: 0;
+		cursor: pointer;
+		display: flex;
+		height: 32px;
+		justify-content: center;
+		padding: 4px;
+		width: 32px;
+	}
+
 	.settings__icon {
 		width: 25px;
 		height: 25px;

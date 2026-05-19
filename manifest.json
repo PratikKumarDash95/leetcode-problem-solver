@@ -13,7 +13,7 @@
       "js": ["content.js"]
     }
   ],
-  "permissions": ["webRequest", "storage"],
+  "permissions": ["webRequest", "storage", "tabs"],
   "action": {
     "default_title": "Click Me",
     "default_popup": "index.html"

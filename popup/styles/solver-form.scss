@@ -1,4 +1,64 @@
 .solver-form {
+	overflow: auto;
+
+	.solver-form__settings {
+		background: white;
+		border-bottom: 1px solid rgb(210,210,210);
+		padding: 12px;
+
+		label {
+			color: black;
+			display: block;
+			font-size: 14px;
+			margin-bottom: 6px;
+		}
+
+		input {
+			border: 1px solid rgb(160,160,160);
+			border-radius: 4px;
+			box-sizing: border-box;
+			font-size: 14px;
+			padding: 8px;
+			width: 100%;
+		}
+
+		p {
+			color: rgb(70,70,70);
+			font-size: 12px;
+			line-height: 18px;
+			margin: 8px 0;
+		}
+	}
+
+	.solver-form__settings-actions {
+		display: flex;
+		gap: 8px;
+
+		button {
+			background-color: rgb(11,72,107);
+			border: 1px solid rgb(11,72,107);
+			border-radius: 4px;
+			color: white;
+			cursor: pointer;
+			font-size: 13px;
+			padding: 7px 10px;
+		}
+
+		button + button {
+			background-color: white;
+			color: rgb(11,72,107);
+		}
+	}
+
+	.solver-form__error {
+		background: rgb(255,240,240);
+		border-bottom: 1px solid rgb(230,170,170);
+		color: rgb(120,20,20);
+		font-size: 13px;
+		line-height: 18px;
+		padding: 10px 12px;
+	}
+
 	.solver-form__no-problem-state {
 		text-align: center;
 		.solver-form__no-problem-state__title {

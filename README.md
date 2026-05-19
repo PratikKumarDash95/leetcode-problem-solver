@@ -20,12 +20,19 @@ $ npm run build
 ### 3) Load the extension
 See [Chrome's developer tutorial](https://developer.chrome.com/docs/extensions/mv3/getstarted/development-basics/) on how to start a chrome extension project. You can select this repository as the unpacked extension to run (should work out of the box)
 
-### 3) Run The Colab API
+### 3) Run the local solver API
 
-The bot runs off of an API coded in [colab](https://colab.research.google.com/drive/1-G9tuDbC3gdqiaGBmFBdQ2N46rsv-zBX?usp=sharing) that's running flask/ngrok. The API is in front of Code LLama Instruct. You can run the colab here. *Remember you have to copy the ngrok url to the `popup/components/SolverForm.js` file*
+Create a local `.env` file, then add your OpenRouter key. The real `.env` file is ignored by git.
 
-Update this url with the new ngrok url from flask
 ```
-	const apiUrl = "http://6bf4-34-143-150-41.ngrok.io"; // change this line
+OPENROUTER_API_KEY=your_key_here
+OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free
+PORT=3000
 ```
+
+```
+$ node server.js
+```
+
+The extension settings should use `http://localhost:3000`.
 
