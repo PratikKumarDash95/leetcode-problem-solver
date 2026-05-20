@@ -2,7 +2,19 @@ thank-you to WTC
 
 # 10x-LeetCode-Solver
 
-A Chrome extension that solves LeetCode problems for you.
+A Chrome extension that generates LeetCode solutions using an AI backend you control.
+
+## About this project
+
+This project includes a Chrome extension UI, a local Node.js backend for development, and Vercel serverless functions for production. The extension sends the current LeetCode problem prompt to your backend, which calls an AI provider and returns only the solution code.
+
+## Tech stack
+
+- Chrome Extension (Manifest V3)
+- React + Webpack (extension popup UI)
+- Node.js (local backend)
+- Vercel Serverless Functions (production backend)
+- OpenRouter / OpenAI (AI providers)
 
 ## Folder structure
 
@@ -25,35 +37,29 @@ api/
 
 ## How to use
 
-### 1) Install frontend packages
+### Install and use (local dev)
 
-You need a recent version of Node.js.
+1) Install frontend dependencies
 
 ```
 npm --prefix frontend install
 ```
 
-### 2) Build the frontend
-
-From the repo root:
+2) Build the extension
 
 ```
 npm run frontend:build
 ```
 
-Or from `frontend/`:
+3) Load the extension in Chrome
 
-```
-npm run build
-```
+- Go to chrome://extensions
+- Enable Developer Mode
+- Click "Load unpacked" and select `frontend/`
 
-### 3) Load the extension
+4) Run the local backend
 
-Open Chrome's extension manager and load `frontend/` as the unpacked extension folder.
-
-### 4) Run the local solver API
-
-Create `backend/.env`, then add your OpenRouter key. The real `.env` file is ignored by git.
+Create `backend/.env` with your key:
 
 ```
 OPENROUTER_API_KEY=your_key_here
@@ -61,19 +67,27 @@ OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free
 PORT=3000
 ```
 
-From the repo root:
+Then start the server:
 
 ```
 npm run backend
 ```
 
-Or from `backend/`:
+5) Use the extension
+
+- Open any LeetCode problem page
+- Open the extension popup
+- Ensure API URL is set to `http://localhost:3000`
+- Click generate
+
+### Install and use (production backend)
+
+1) Deploy the backend to Vercel (steps below).
+2) Set the extension API URL to your Vercel endpoint:
 
 ```
-npm start
+https://your-vercel-project.vercel.app/api
 ```
-
-The extension settings should use `http://localhost:3000`.
 
 ## Deploy backend to Vercel
 
@@ -125,6 +139,20 @@ Upload this ZIP to Chrome Web Store:
 ```
 frontend/release/leetcode-solver-extension.zip
 ```
+
+## Direct download link (no Web Store)
+
+If you want to share a click-to-download link without the Chrome Web Store, publish the ZIP as a GitHub Release asset and put the URL here:
+
+https://github.com/PratikKumarDash95/leetcode-problem-solver/releases/latest/download/leetcode-solver-extension.zip
+
+## Manual install from ZIP (no Web Store)
+
+1) Download the ZIP from the link above.
+2) Extract it to a folder.
+3) Go to chrome://extensions
+4) Enable Developer Mode.
+5) Click "Load unpacked" and select the extracted folder.
 
 Manual Chrome Web Store steps:
 
