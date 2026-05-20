@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "node -e \"console.log('No root build step required')\"",
+    "build": "npm --prefix frontend run build",
     "backend": "node backend/server.js",
     "backend:check": "node --check backend/server.js",
     "frontend:build": "npm --prefix frontend run build",
