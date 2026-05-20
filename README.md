@@ -1,6 +1,6 @@
 thank-you to WTC
 
-# 10x-LeetCode-Solver
+# LeetCode-Solver
 
 A Chrome extension that generates LeetCode solutions using an AI backend you control.
 
