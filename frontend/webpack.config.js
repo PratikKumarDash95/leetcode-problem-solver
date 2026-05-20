@@ -1,4 +1,5 @@
 const path = require('path')
+const webpack = require('webpack')
 
 module.exports = (env, options) => {
   return {
@@ -13,6 +14,11 @@ module.exports = (env, options) => {
       path: path.join(__dirname, '/dist'),
       filename: '[name].bundle.js',
     },
+    plugins: [
+      new webpack.DefinePlugin({
+        'process.env.API_URL': JSON.stringify(process.env.API_URL || ''),
+      }),
+    ],
     module: {
       rules: [
         {

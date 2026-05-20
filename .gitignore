@@ -1,6 +1,10 @@
 node_modules
+frontend/node_modules
 dist
+frontend/dist
+frontend/release
 .env
+backend/.env
 build
 coverage
 *.log

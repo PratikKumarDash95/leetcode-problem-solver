@@ -9,7 +9,8 @@
   "host_permissions": [
     "https://leetcode.com/*",
     "https://www.leetcode.com/*",
-    "http://localhost/*"
+    "http://localhost/*",
+    "https://*.vercel.app/*"
   ],
   "content_scripts": [
     {
@@ -20,7 +21,7 @@
       "js": ["content.js"]
     }
   ],
-  "permissions": ["storage", "tabs"],
+  "permissions": ["storage", "tabs", "scripting"],
   "action": {
     "default_title": "Click Me",
     "default_popup": "index.html"

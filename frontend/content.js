@@ -25,10 +25,13 @@ function runSolver() {
 
 function sendEditorCommand(type, sourceCode, sendResponse) {
 	const requestId = `${Date.now()}-${Math.random()}`;
+	const timeoutMs = type === "autoType"
+		? Math.max(30000, (sourceCode?.length || 0) * 80 + 5000)
+		: 5000;
 	const timeoutId = setTimeout(() => {
 		window.removeEventListener("sendChromeDataResult", handleResult);
 		sendResponse({ ok: false, error: "Timed out while updating the LeetCode editor." });
-	}, 5000);
+	}, timeoutMs);
 
 	function handleResult(event) {
 		if (event.detail?.requestId && event.detail.requestId !== requestId) {

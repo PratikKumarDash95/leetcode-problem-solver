@@ -55,6 +55,50 @@ function getEditor() {
     };
 }
 
+function getEditorDomNode(editor) {
+    return editor?.getDomNode?.()
+        || document.querySelector('#editor .monaco-editor')
+        || document.querySelector('.monaco-editor');
+}
+
+function focusEditor(editor) {
+    editor?.focus?.();
+
+    const editorNode = getEditorDomNode(editor);
+    if (!editorNode) {
+        return;
+    }
+
+    editorNode.scrollIntoView?.({ block: "center", inline: "nearest" });
+    editorNode.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true, view: window }));
+    editorNode.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, cancelable: true, view: window }));
+    editorNode.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+
+    const input = editorNode.querySelector("textarea.inputarea")
+        || editorNode.querySelector("textarea")
+        || document.querySelector(".monaco-editor textarea.inputarea")
+        || document.querySelector("#editor textarea");
+
+    input?.focus?.();
+}
+
+function replaceEditorValue(editor, value) {
+    focusEditor(editor);
+
+    if (editor?.executeEdits && editor?.getModel?.()) {
+        const model = editor.getModel();
+        editor.executeEdits("leetcode-solver", [{
+            range: model.getFullModelRange(),
+            text: value,
+            forceMoveMarkers: true,
+        }]);
+        editor.pushUndoStop?.();
+        return;
+    }
+
+    editor.setValue(value);
+}
+
 async function setEditorValue(sourceCode, type) {
     const editor = getEditor();
     if (!editor) {
@@ -64,7 +108,7 @@ async function setEditorValue(sourceCode, type) {
     const parsedSourceCode = parseCode(sourceCode);
 
     if (type === "autoPaste") {
-        editor.setValue(parsedSourceCode);
+        replaceEditorValue(editor, parsedSourceCode);
         return;
     }
 
@@ -73,7 +117,7 @@ async function setEditorValue(sourceCode, type) {
     while (codeCharSplit.length > 0) {
         addedChars += codeCharSplit.shift();
         await timeout(20 + Math.round(Math.random() * 40));
-        editor.setValue(addedChars);
+        replaceEditorValue(editor, addedChars);
     }
 }
 
