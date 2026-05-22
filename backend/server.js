@@ -65,12 +65,25 @@ const server = http.createServer(async (request, response) => {
 
 server.listen(PORT, () => {
 	const config = getSolverConfig();
+	const providerNames = { openai: "OpenAI", openrouter: "OpenRouter", freemodel: "FreeModel" };
+	const providerName = providerNames[config.provider] || config.provider;
+	const modelMap = {
+		openai: config.openAiModel,
+		openrouter: config.openRouterModel,
+		freemodel: config.freeModelModel,
+	};
+	const model = modelMap[config.provider];
+
 	console.log(`LeetCode solver API running at http://localhost:${PORT}`);
-	console.log(`Using ${config.provider === "openai" ? "OpenAI" : "OpenRouter"} model: ${config.provider === "openai" ? config.openAiModel : config.openRouterModel}`);
+	console.log(`Using ${providerName} model: ${model}`);
+
 	if (config.provider === "openai" && !config.openAiApiKey) {
 		console.log("Set OPENAI_API_KEY before using /generate.");
 	}
-	if (config.provider !== "openai" && !config.openRouterApiKey) {
+	if (config.provider === "openrouter" && !config.openRouterApiKey) {
 		console.log("Set OPENROUTER_API_KEY before using /generate.");
+	}
+	if (config.provider === "freemodel" && !config.freeModelApiKey) {
+		console.log("Set FREEMODEL_API_KEY before using /generate.");
 	}
 });

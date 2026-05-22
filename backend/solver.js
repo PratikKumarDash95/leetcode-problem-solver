@@ -32,14 +32,18 @@ loadEnvFile();
 function getSolverConfig() {
 	const openRouterApiKey = process.env.OPENROUTER_API_KEY;
 	const openAiApiKey = process.env.OPENAI_API_KEY;
-	const provider = (process.env.AI_PROVIDER || (openRouterApiKey ? "openrouter" : "openai")).toLowerCase();
+	const freeModelApiKey = process.env.FREEMODEL_API_KEY;
+	const provider = (process.env.AI_PROVIDER || (freeModelApiKey ? "freemodel" : openRouterApiKey ? "openrouter" : "openai")).toLowerCase();
 
 	return {
 		provider,
 		openRouterApiKey,
 		openAiApiKey,
+		freeModelApiKey,
 		openRouterModel: process.env.OPENROUTER_MODEL || "nvidia/nemotron-3-super-120b-a12b:free",
 		openAiModel: process.env.OPENAI_MODEL || "gpt-4o-mini",
+		freeModelModel: process.env.FREEMODEL_MODEL || "gpt 5.4 medium",
+		freeModelUrl: process.env.FREEMODEL_URL || "https://cc.freemodel.dev",
 	};
 }
 
@@ -64,15 +68,19 @@ function formatProviderError(providerName, status, result) {
 async function generateSolution(prompt) {
 	const config = getSolverConfig();
 	const useOpenAI = config.provider === "openai";
-	const apiKey = useOpenAI ? config.openAiApiKey : config.openRouterApiKey;
-	const model = useOpenAI ? config.openAiModel : config.openRouterModel;
-	const providerName = useOpenAI ? "OpenAI" : "OpenRouter";
-	const url = useOpenAI
+	const useFreeModel = config.provider === "freemodel";
+	const apiKey = useFreeModel ? config.freeModelApiKey : useOpenAI ? config.openAiApiKey : config.openRouterApiKey;
+	const model = useFreeModel ? config.freeModelModel : useOpenAI ? config.openAiModel : config.openRouterModel;
+	const providerName = useFreeModel ? "FreeModel" : useOpenAI ? "OpenAI" : "OpenRouter";
+	const url = useFreeModel
+		? `${config.freeModelUrl}/v1/chat/completions`
+		: useOpenAI
 		? "https://api.openai.com/v1/chat/completions"
 		: "https://openrouter.ai/api/v1/chat/completions";
 
 	if (!apiKey) {
-		throw new Error(`${useOpenAI ? "OPENAI_API_KEY" : "OPENROUTER_API_KEY"} is not set`);
+		const keyName = useFreeModel ? "FREEMODEL_API_KEY" : useOpenAI ? "OPENAI_API_KEY" : "OPENROUTER_API_KEY";
+		throw new Error(`${keyName} is not set`);
 	}
 
 	const headers = {
@@ -80,7 +88,7 @@ async function generateSolution(prompt) {
 		"Content-Type": "application/json",
 	};
 
-	if (!useOpenAI) {
+	if (!useOpenAI && !useFreeModel) {
 		headers["HTTP-Referer"] = process.env.APP_URL || "http://localhost:3000";
 		headers["X-Title"] = "LeetCode Solver";
 	}
