@@ -73,7 +73,7 @@ async function generateSolution(prompt) {
 	const model = useFreeModel ? config.freeModelModel : useOpenAI ? config.openAiModel : config.openRouterModel;
 	const providerName = useFreeModel ? "FreeModel" : useOpenAI ? "OpenAI" : "OpenRouter";
 	const url = useFreeModel
-		? `${config.freeModelUrl}/v1/chat/completions`
+		? `${config.freeModelUrl}/v1/messages`
 		: useOpenAI
 		? "https://api.openai.com/v1/chat/completions"
 		: "https://openrouter.ai/api/v1/chat/completions";
@@ -88,28 +88,37 @@ async function generateSolution(prompt) {
 		"Content-Type": "application/json",
 	};
 
+	if (useFreeModel) {
+		headers["anthropic-version"] = "2023-06-01";
+	}
+
 	if (!useOpenAI && !useFreeModel) {
 		headers["HTTP-Referer"] = process.env.APP_URL || "http://localhost:3000";
 		headers["X-Title"] = "LeetCode Solver";
 	}
 
+	const systemPrompt = "Return only the completed LeetCode solution code. Do not include explanations.";
+	const body = useFreeModel
+		? {
+			model,
+			max_tokens: 4096,
+			system: systemPrompt,
+			messages: [{ role: "user", content: prompt }],
+			temperature: 0.2,
+		}
+		: {
+			model,
+			messages: [
+				{ role: "system", content: systemPrompt },
+				{ role: "user", content: prompt },
+			],
+			temperature: 0.2,
+		};
+
 	const response = await fetch(url, {
 		method: "POST",
 		headers,
-		body: JSON.stringify({
-			model,
-			messages: [
-				{
-					role: "system",
-					content: "Return only the completed LeetCode solution code. Do not include explanations.",
-				},
-				{
-					role: "user",
-					content: prompt,
-				},
-			],
-			temperature: 0.2,
-		}),
+		body: JSON.stringify(body),
 	});
 
 	const responseText = await response.text();
@@ -124,7 +133,10 @@ async function generateSolution(prompt) {
 		throw new Error(formatProviderError(providerName, response.status, result));
 	}
 
-	return extractCode(result.choices?.[0]?.message?.content || "");
+	const content = useFreeModel
+		? (result.content?.find?.((block) => block.type === "text")?.text || "")
+		: (result.choices?.[0]?.message?.content || "");
+	return extractCode(content);
 }
 
 module.exports = {
