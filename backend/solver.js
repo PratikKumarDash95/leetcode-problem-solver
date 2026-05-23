@@ -42,8 +42,8 @@ function getSolverConfig() {
 		freeModelApiKey,
 		openRouterModel: process.env.OPENROUTER_MODEL || "nvidia/nemotron-3-super-120b-a12b:free",
 		openAiModel: process.env.OPENAI_MODEL || "gpt-4o-mini",
-		freeModelModel: process.env.FREEMODEL_MODEL || "gpt 5.4 medium",
-		freeModelUrl: process.env.FREEMODEL_URL || "https://cc.freemodel.dev",
+		freeModelModel: process.env.FREEMODEL_MODEL || "gpt-5.4",
+		freeModelUrl: process.env.FREEMODEL_URL || "https://api.freemodel.dev",
 	};
 }
 
@@ -73,7 +73,7 @@ async function generateSolution(prompt) {
 	const model = useFreeModel ? config.freeModelModel : useOpenAI ? config.openAiModel : config.openRouterModel;
 	const providerName = useFreeModel ? "FreeModel" : useOpenAI ? "OpenAI" : "OpenRouter";
 	const url = useFreeModel
-		? `${config.freeModelUrl}/v1/messages`
+		? `${config.freeModelUrl}/v1/chat/completions`
 		: useOpenAI
 		? "https://api.openai.com/v1/chat/completions"
 		: "https://openrouter.ai/api/v1/chat/completions";
@@ -88,32 +88,24 @@ async function generateSolution(prompt) {
 		"Content-Type": "application/json",
 	};
 
-	if (useFreeModel) {
-		headers["anthropic-version"] = "2023-06-01";
-	}
-
 	if (!useOpenAI && !useFreeModel) {
 		headers["HTTP-Referer"] = process.env.APP_URL || "http://localhost:3000";
 		headers["X-Title"] = "LeetCode Solver";
 	}
 
 	const systemPrompt = "Return only the completed LeetCode solution code. Do not include explanations.";
-	const body = useFreeModel
-		? {
-			model,
-			max_tokens: 4096,
-			system: systemPrompt,
-			messages: [{ role: "user", content: prompt }],
-			temperature: 0.2,
-		}
-		: {
-			model,
-			messages: [
-				{ role: "system", content: systemPrompt },
-				{ role: "user", content: prompt },
-			],
-			temperature: 0.2,
-		};
+	const body = {
+		model,
+		messages: [
+			{ role: "system", content: systemPrompt },
+			{ role: "user", content: prompt },
+		],
+		temperature: 0.2,
+	};
+
+	if (useFreeModel) {
+		body.reasoning_effort = "high";
+	}
 
 	const response = await fetch(url, {
 		method: "POST",
@@ -133,9 +125,7 @@ async function generateSolution(prompt) {
 		throw new Error(formatProviderError(providerName, response.status, result));
 	}
 
-	const content = useFreeModel
-		? (result.content?.find?.((block) => block.type === "text")?.text || "")
-		: (result.choices?.[0]?.message?.content || "");
+	const content = result.choices?.[0]?.message?.content || "";
 	return extractCode(content);
 }
 
