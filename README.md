@@ -44,25 +44,25 @@ api/
 
 ### Install and use (local dev)
 
-1) Install frontend dependencies
+1. Install frontend dependencies
 
 ```
 npm --prefix frontend install
 ```
 
-2) Build the extension
+2. Build the extension
 
 ```
 npm run frontend:build
 ```
 
-3) Load the extension in Chrome
+3. Load the extension in Chrome
 
 - Go to chrome://extensions
 - Enable Developer Mode
 - Click "Load unpacked" and select `frontend/`
 
-4) Run the local backend
+4. Run the local backend
 
 Create `backend/.env` with your key:
 
@@ -78,7 +78,7 @@ Then start the server:
 npm run backend
 ```
 
-5) Use the extension
+5. Use the extension
 
 - Open any LeetCode problem page
 - Open the extension popup
@@ -87,8 +87,8 @@ npm run backend
 
 ### Install and use (production backend)
 
-1) Deploy the backend to Vercel (steps below).
-2) Set the extension API URL to your Vercel endpoint:
+1. Deploy the backend to Vercel (steps below).
+2. Set the extension API URL to your Vercel endpoint:
 
 ```
 https://your-vercel-project.vercel.app/api
@@ -153,11 +153,11 @@ https://github.com/PratikKumarDash95/leetcode-problem-solver/releases/latest/dow
 
 ## Manual install from ZIP (no Web Store)
 
-1) Download the ZIP from the link above.
-2) Extract it to a folder.
-3) Go to chrome://extensions
-4) Enable Developer Mode.
-5) Click "Load unpacked" and select the extracted folder.
+1. Download the ZIP from the link above.
+2. Extract it to a folder.
+3. Go to chrome://extensions
+4. Enable Developer Mode.
+5. Click "Load unpacked" and select the extracted folder.
 
 Manual Chrome Web Store steps:
 
@@ -167,4 +167,3 @@ Manual Chrome Web Store steps:
 4. Fill listing copy, screenshots, category, distribution, and privacy fields.
 5. Add a privacy policy URL. The extension sends LeetCode problem text, starter code, and generated solution requests to your backend and AI provider.
 6. Submit for review.
-
