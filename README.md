@@ -1,5 +1,9 @@
 thank-you to WTC
 
+<video src="public/Video%20Project%201.mp4" controls width="100%"></video>
+<br>
+<img src="public/Screenshot%202026-05-28%20104703.png" width="400" />
+
 # LeetCode-Solver
 
 A Chrome extension that generates LeetCode solutions using an AI backend you control.
