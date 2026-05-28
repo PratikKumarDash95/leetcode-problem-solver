@@ -1,6 +1,8 @@
 thank-you to WTC
 
-https://github.com/PratikKumarDash95/leetcode-problem-solver/raw/main/public/Video%20Project%201.mp4
+<video controls>
+  <source src="https://raw.githubusercontent.com/PratikKumarDash95/leetcode-problem-solver/main/public/Video%20Project%201.mp4" type="video/mp4">
+</video>
 
 <br>
 <img src="public/Screenshot%202026-05-28%20104703.png" width="400" />
