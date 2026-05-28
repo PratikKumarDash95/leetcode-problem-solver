@@ -1,17 +1,17 @@
 thank-you to WTC
 
-https://github.com/user-attachments/assets/b5dff93c-ca23-4e91-92d7-98a1aa55be49
-
-<br>
-<img src="public/Screenshot%202026-05-28%20104703.png" width="400" />
-
 # LeetCode-Solver
 
 A Chrome extension that generates LeetCode solutions using an AI backend you control.
 
+https://github.com/user-attachments/assets/b5dff93c-ca23-4e91-92d7-98a1aa55be49
+
 ## About this project
 
 This project includes a Chrome extension UI, a local Node.js backend for development, and Vercel serverless functions for production. The extension sends the current LeetCode problem prompt to your backend, which calls an AI provider and returns only the solution code.
+
+<br>
+<img src="public/Screenshot%202026-05-28%20104703.png" width="400" />
 
 ## Tech stack
 
